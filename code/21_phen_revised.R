@@ -18,12 +18,13 @@ data3$t_n_fl_corrected<-NULL
 data3$predicted<-NULL
 names(data3)
 
-phen_revised<-read.table("phen_revised.txt",header=T,sep="\t",dec=".")
+phen_revised<-read.table("./data/clean/data_phen_revised.txt",header=T,sep="\t",dec=".")
+
 head(phen_revised)
 str(phen_revised) #302 obs
 #with(phen_revised,table(pop))#102,97,103
 
-data5<-merge(data3,phen_revised,by="id_pl")
+data5<-merge(data3,phen_revised,by="id_pl") #MODIFY FROM HERE NAMES / LOCATIONS OF DATAFILES
 head(data5)
 str(data5) #295 obs
 with(data5,table(pop))#99,93,103
@@ -97,28 +98,6 @@ p3<-ggplot(phenology,aes(x=julian_w2))+
   geom_histogram(aes(y=..density..),binwidth=10,colour="black", fill="white")+
   geom_density(alpha=.2, fill="#FF6666")+ggtitle("Julian day when phen=2")+theme(plot.title=element_text(size=10))
 multiplot(p1, p2, p3, cols=3)
-
-######################################################################################################
-#Getting data std by pop to use later, maybe
-data5$t_phen_index<-NULL
-data5$t_most_adv<-NULL
-data5$t_most_adv1<-NULL
-data5$t_most_adv2<-NULL
-data5$t_most_adv_avg<-NULL
-data5$t_n_fl_corrected<-NULL
-data5$predicted<-NULL
-data5$id<-NULL
-
-data5 <- transform(data5, t_shoot_h = ave(shoot_h, pop, FUN = scale))
-data5 <- transform(data5, t_veg_h_mean = ave(veg_h_mean, pop, FUN = scale))
-data5 <- transform(data5, t_n_intact_fruits = ave(n_intact_fruits, pop, FUN = scale))
-data5 <- transform(data5, t_n_eggs_max = ave(n_eggs_max, pop, FUN = scale))
-data5 <- transform(data5, t_n_redants = ave(n_redants, pop, FUN = scale))
-data5 <- transform(data5, t_meanT = ave(meanT, pop, FUN = scale))
-data5 <- transform(data5, t_phen_index1 = ave(phen_index1, pop, FUN = scale))
-data5 <- transform(data5, t_phen_index2 = ave(phen_index2, pop, FUN = scale))
-data5 <- transform(data5, t_n_fl = ave(n_fl, pop, FUN = scale))
-data5 <- transform(data5, t_phen_index_avg = ave(phen_index_avg, pop, FUN = scale))
 
 #####################################################################################################
 data6<-merge(data5,phenology[c(1,9:10)],by="id_pl")
@@ -457,7 +436,7 @@ summary(model.avg(models4d, subset = delta < 2))
 
 ######################################################################################
 # Proportion of buds with eggs
-buds_eggs<-read.table("buds_eggs.txt",header=T,sep=",",dec=".")
+buds_eggs<-read.table("./data/clean/buds_eggs.txt",header=T,sep=",",dec=".")
 head(buds_eggs)
 str(buds_eggs) #309 obs
 
@@ -497,7 +476,7 @@ summary(glm.nb(n_eggs_max~redants_pres,data=subset(data8,pop=="T"&n_eggs_max>0))
 
 
 # Ants present more than once
-days_ant_pres<-read.table("days_ant_pres.txt",header=T,sep=",",dec=".")
+days_ant_pres<-read.table("./data/clean/days_ant_pres.txt",header=T,sep=",",dec=".")
 head(days_ant_pres)
 str(days_ant_pres) 
 

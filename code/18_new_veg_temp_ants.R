@@ -1,7 +1,5 @@
 library(ggplot2)
 library(MASS)
-library(piecewiseSEM)
-library(gridExtra)
 library(MuMIn)
 
 #Rebuild data file with new temperature data (only based on day temperatures)
@@ -12,47 +10,7 @@ head(data3)
 str(data3)
 
 data3<-merge(data3,loggers_day_agg,by="id_pl")
-write.table(data3,file="data3.txt",sep="\t",dec=".",col.names=T)
-
-#Relation among temperature and eggs (hypothesis?)
-
-summary(glm.nb(n_eggs_max~meanT*population,data=data3)) #Better (lower AIC, less overdisp.) Interaction*
-summary(glm(n_eggs_max~meanT*population,data=data3,family="poisson"))
-summary(glm.nb(n_eggs_max~maxT*population,data=data3)) #Better (lower AIC, less overdisp.)  Interaction*
-summary(glm(n_eggs_max~maxT*population,data=data3,family="poisson"))
-summary(glm.nb(n_eggs_max~minT*population,data=data3)) #Better (lower AIC, less overdisp.) Interaction NS
-summary(glm(n_eggs_max~minT*population,data=data3,family="poisson"))
-summary(glm.nb(n_eggs_max~sdT*population,data=data3)) #Better (lower AIC, less overdisp.)  Interaction*
-summary(glm(n_eggs_max~sdT*population,data=data3,family="poisson"))
-summary(glm.nb(n_eggs_max~rangeT*population,data=data3)) #Better (lower AIC, less overdisp.)  Interaction*
-summary(glm(n_eggs_max~rangeT*population,data=data3,family="poisson"))
-
-ggplot(data3, aes(meanT, n_eggs_max)) +
-  geom_smooth(method = MASS::glm.nb,  se = T,colour="black")+
-  geom_point(size = 2)+facet_grid(.~population)+ 
-  theme(legend.position="none")+ggtitle("Interaction meanT*pop")+theme_bw()
-ggplot(data3, aes(maxT, n_eggs_max,colour = population)) +
-  geom_smooth(method = MASS::glm.nb,  se = T)+
-  geom_point(size = 2)+facet_grid(.~population)+ 
-  theme(legend.position="none")+ggtitle("Interaction maxT*pop")
-ggplot(data3, aes(minT, n_eggs_max,colour = population)) +
-  geom_smooth(method = MASS::glm.nb,  se = T)+
-  geom_point(size = 2)+facet_grid(.~population)+ 
-  theme(legend.position="none")+ggtitle("Interaction minT*pop")
-ggplot(data3, aes(sdT, n_eggs_max,colour = population)) +
-  geom_smooth(method = MASS::glm.nb,  se = T)+
-  geom_point(size = 2)+facet_grid(.~population)+ 
-  theme(legend.position="none")+ggtitle("Interaction sdT*pop")
-ggplot(data3, aes(rangeT, n_eggs_max,colour = population)) +
-  geom_smooth(method = MASS::glm.nb,  se = T)+
-  geom_point(size = 2)+facet_grid(.~population)+ 
-  theme(legend.position="none")+ggtitle("Interaction rangeT*pop")
-
-summary(glm.nb(n_eggs_max~meanT*pop,data=data3)) #Interaction
-summary(glm.nb(n_eggs_max~maxT*pop,data=data3)) #Interaction
-summary(glm.nb(n_eggs_max~minT*pop,data=data3)) #No interaction
-summary(glm.nb(n_eggs_max~sdT*pop,data=data3)) #Interaction
-summary(glm.nb(n_eggs_max~rangeT*pop,data=data3)) #Interaction
+write.table(data3,file="data3.txt",sep="\t",dec=".",col.names=T) #MODIFY NAME / LOCATION!
 
 #Relation among temperature and vegetation height (hypothesis ok)
 with(data3,hist(meanT)) #Quite normally distributed
