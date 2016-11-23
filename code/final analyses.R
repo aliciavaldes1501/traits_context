@@ -1,3 +1,7 @@
+#####################################################################################
+######################## Final analyses to be included in paper #####################
+#####################################################################################
+
 library(ggplot2)
 library(MASS)
 library(MuMIn)
@@ -5,107 +9,12 @@ library(visreg)
 library(effects)
 library(pscl)
 library(lme4)
+library(ggthemr)
 
-with(data3,table(pop))#104,94,103
-str(data3)#301 obs
-names(data3)
-data3$phen_index<-NULL
-data3$most_adv<-NULL
-data3$n_fl_corrected<-NULL
-data3$t_phen_index<-NULL
-data3$t_most_adv<-NULL
-data3$t_n_fl_corrected<-NULL
-data3$predicted<-NULL
-names(data3)
+#5 different models
+#Response variables: meanT, phen_index_avg, n_redants, n_eggs_max,cbind(n_intact_fruits,n_fl)
 
-phen_revised<-read.table("./data/clean/data_phen_revised.txt",header=T,sep="\t",dec=".")
-
-head(phen_revised)
-str(phen_revised) #302 obs
-#with(phen_revised,table(pop))#102,97,103
-
-data5<-merge(data3,phen_revised,by="id_pl") #MODIFY FROM HERE NAMES / LOCATIONS OF DATAFILES
-head(data5)
-str(data5) #295 obs
-with(data5,table(pop))#99,93,103
-
-write.table(data5,file="data5.txt",sep="\t",dec=".",col.names=T)
-
-with(data5,hist(phen_index1))
-with(data5,hist(phen_index2))
-with(data5,hist(most_adv1))
-with(data5,hist(most_adv2))
-with(data5,hist(n_fl))
-
-#There were 23 plants where phenology did not change from t1 to t2
-#Assign them a state at t2 based on what we would expect if development had continued
-#Use the relationship: phen_index2 = phen_index1 + n_fl + phen_index1 * n_fl
-#for all plants that developed to assign those 23 a value,
-#and based on this, calculate measure 1 (phen_avg), 2 (julian3) or 3 (julian2).
-
-data5$phen_index_diff<-data5$phen_index2-data5$phen_index1
-model1<-lm(phen_index2~phen_index1*n_fl,data=subset(data5,phen_index_diff>0))
-summary(model1) #R2=0.44
-nobs(model1) #295-23=272 plants
-plot(model1) #meh
-
-with(subset(data5,phen_index_diff>0),plot(phen_index2~phen_index1))
-with(subset(data5,phen_index_diff>0),plot(phen_index2~n_fl))
-
-newdata<-subset(data5,phen_index_diff==0)[c(1,21,32)]
-newdata$phen_index2_pred<-predict(model1,newdata)
-newdata
-
-data5<-merge(data5,newdata[c(1,4)],by="id_pl",all.x=T)
-data5$phen_index2c<-ifelse(data5$phen_index_diff>0,data5$phen_index2,data5$phen_index2_pred)
-with(data5,hist(phen_index2))
-with(data5,hist(phen_index2c))
-
-####################################################################
-
-#New measure of phenology: average two dates
-data5$phen_index_avg<-(data5$phen_index1+data5$phen_index2c)/2
-with(data5,hist(phen_index_avg))
-with(data4,hist(phen_index_avg)) #Compare
-
-par(mfrow=c(1,3))
-with(data5,hist(phen_index1,main="Mean on 29-30 July"))
-with(data5,hist(phen_index2c,main="Mean on 27-29 August, corr"))
-with(data5,hist(phen_index_avg,main="Mean, average 2 dates"))
-
-p1<-ggplot(data5, aes(x=phen_index1, fill=pop)) + geom_density(alpha=.3)+theme(legend.position="none")+ggtitle("Mean on 29-30 July")
-p2<-ggplot(data5, aes(x=phen_index2c, fill=pop)) + geom_density(alpha=.3)+theme(legend.position="none")+ggtitle("Mean on 27-29 August, corr")
-p3<-ggplot(data5, aes(x=phen_index_avg, fill=pop)) + geom_density(alpha=.3)+theme(legend.position="none")+ggtitle("Mean, average 2 dates")
-multiplot(p1, p2, p3, cols=3)
-
-p1<-ggplot(data5, aes(x=phen_index1)) + geom_density(alpha=.3)+theme(legend.position="none")+ggtitle("Mean on 29-30 July")
-p2<-ggplot(data5, aes(x=phen_index2c)) + geom_density(alpha=.3)+theme(legend.position="none")+ggtitle("Mean on 27-29 August, corr")
-p3<-ggplot(data5, aes(x=phen_index_avg)) + geom_density(alpha=.3)+theme(legend.position="none")+ggtitle("Mean, average 2 dates")
-multiplot(p1, p2, p3, cols=3)
-
-#New measure of phenology: extrapolated
-phenology<-read.table("phenology.txt",header=T,sep=",",dec=".",na.strings=".")
-head(phenology)
-str(phenology)
-
-p1<-ggplot(phenology,aes(x=phen_avg))+
-  geom_histogram(aes(y=..density..),binwidth=.5,colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666")+ggtitle("Average 2 dates")+theme(plot.title=element_text(size=10))
-p2<-ggplot(phenology,aes(x=julian_w3))+
-  geom_histogram(aes(y=..density..),binwidth=10,colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666")+ggtitle("Julian day when phen=3")+theme(plot.title=element_text(size=10))
-p3<-ggplot(phenology,aes(x=julian_w2))+
-  geom_histogram(aes(y=..density..),binwidth=10,colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666")+ggtitle("Julian day when phen=2")+theme(plot.title=element_text(size=10))
-multiplot(p1, p2, p3, cols=3)
-
-#####################################################################################################
-data6<-merge(data5,phenology[c(1,9:10)],by="id_pl")
-head(data6)
-str(data6)
-#####################################################################################################
-
-#Relation among temperature and vegetation height ###################################################
+#Temp ~ veg h ###################################################
 summary(lm(meanT~veg_h_mean*pop,data=data6)) 
 #Now interaction is * (due to few pls removed!) but still negative relationship in all 3 pops
 summary(lm(t_meanT~t_veg_h_mean+t_veg_h_mean:pop,data=data6)) #data std by pop, negative effect, no int

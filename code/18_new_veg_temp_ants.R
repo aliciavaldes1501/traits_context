@@ -1,17 +1,3 @@
-library(ggplot2)
-library(MASS)
-library(MuMIn)
-
-#Rebuild data file with new temperature data (only based on day temperatures)
-#and leaving only needed variables
-names(data1comp)
-data3<-data1comp[c(1:2,4,7,17:18,23,28:30)]
-head(data3)
-str(data3)
-
-data3<-merge(data3,loggers_day_agg,by="id_pl")
-write.table(data3,file="data3.txt",sep="\t",dec=".",col.names=T) #MODIFY NAME / LOCATION!
-
 #Relation among temperature and vegetation height (hypothesis ok)
 with(data3,hist(meanT)) #Quite normally distributed
 
@@ -230,7 +216,6 @@ ggplot(data3, aes(meanT, n_eggs_max)) +
   theme(legend.position="none")+theme_bw()
 
 #Some model selection with n_eggs
-##########################################################################################        
 summary(glm.nb(n_eggs_max~phen_index+n_fl_corrected+shoot_h+veg_h_mean+n_redants+pop,
                data=data3))
 #Without temp
