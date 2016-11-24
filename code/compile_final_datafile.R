@@ -12,9 +12,6 @@ library(pscl)
 library(lme4)
 library(ggthemr)
 
-#Set the colour scheme and layout for ggplot (stays for whole session)
-ggthemr(palette="greyscale", layout = "clean")
-
 #Rebuild data file with new temperature data (only based on day temperatures)
 #and leaving only needed variables
 names(data1)
@@ -99,16 +96,16 @@ str(data3)
 #Histograms of the different measures
 
 #Phenology at time 1, 2, and average
-p1<-ggplot(data3,aes(x=phen_index1))+
+p1<-ggplot(data3,aes(x=phen_index1))+ theme_base()+
   geom_histogram(aes(y=..density..),binwidth=.5,colour="black", fill="white")+ 
   geom_density(alpha=.2, fill="#FF6666")+ggtitle("Mean on 29-30 July")+theme(plot.title=element_text(size=10))
-p2<-ggplot(data3,aes(x=phen_index2c))+
+p2<-ggplot(data3,aes(x=phen_index2c))+ theme_base()+
   geom_histogram(aes(y=..density..),binwidth=.5,colour="black", fill="white")+
   geom_density(alpha=.2, fill="#FF6666")+ggtitle("Mean on 27-29 August, corr")+theme(plot.title=element_text(size=10))
-p3<-ggplot(data3,aes(x=phen_index_avg))+
+p3<-ggplot(data3,aes(x=phen_index_avg))+ theme_base()+
   geom_histogram(aes(y=..density..),binwidth=.5,colour="black", fill="white")+
   geom_density(alpha=.2, fill="#FF6666")+ggtitle("Mean, average 2 dates")+theme(plot.title=element_text(size=10))
-p4<-ggplot(data3,aes(x=julian_w3))+
+p4<-ggplot(data3,aes(x=julian_w3))+ theme_base()+
   geom_histogram(aes(y=..density..),binwidth=10,colour="black", fill="white")+
   geom_density(alpha=.2, fill="#FF6666")+ggtitle("Julian day when phen=3")+theme(plot.title=element_text(size=10))
 pdf("./results/figures/comparison_distr_phen_measures.pdf", family="Times")

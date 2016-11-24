@@ -10,204 +10,171 @@ library(effects)
 library(pscl)
 library(lme4)
 library(ggthemr)
+library(xtable)
+library(ggthemes)
+library(fmsb)
 
 #5 different models
 #Response variables: meanT, phen_index_avg, n_redants, n_eggs_max,cbind(n_intact_fruits,n_fl)
+#Distributions of response variables
 
-#Temp ~ veg h ###################################################
-summary(lm(meanT~veg_h_mean*pop,data=data6)) 
-#Now interaction is * (due to few pls removed!) but still negative relationship in all 3 pops
-summary(lm(t_meanT~t_veg_h_mean+t_veg_h_mean:pop,data=data6)) #data std by pop, negative effect, no int
-#If using data std by pop, should not include the main effect of pop, right?
+#Temp ~ veg ###################################################
+model_temp<-lm(meanT~veg_h_mean*pop,data=data3,na.action="na.fail")
+summary(model_temp) 
+models_temp<-dredge(model_temp)
+summary(model.avg(models_temp, subset = delta < 2)) 
+print.xtable(xtable(xtable(summary(model.avg(models_temp, subset = delta < 2))),
+      digits=c(0,3,3,3,2,3)), type="html",file="./results/tables/model_temp.html")
+models_temp[1]
+summary(lm(meanT~veg_h_mean*pop,data=data3,na.action="na.fail"))
+#Interaction is * but still negative relationship in all 3 pops
 
-p1<-ggplot(data6, aes(veg_h_mean,meanT, colour = population)) +
-  geom_smooth(method = "lm",  se = T,fullrange=T)+
-  geom_point(size = 1)+
-  theme(legend.position="none")
-p2<-ggplot(data6, aes(t_veg_h_mean,t_meanT, colour = population)) +
-  geom_smooth(method = "lm",  se = T,fullrange=T)+
-  geom_point(size = 1)+theme(legend.position="none")
-multiplot(p1,p2,cols=2)
+model_temp_H<-lm(meanT~veg_h_mean,data=subset(data3,pop=="H")) #*
+model_temp_R<-lm(meanT~veg_h_mean,data=subset(data3,pop=="R")) #*
+model_temp_T<-lm(meanT~veg_h_mean,data=subset(data3,pop=="T")) #* 
+summary(model_temp_H)
+summary(model_temp_R)
+summary(model_temp_T)
 
-summary(lm(meanT~veg_h_mean,data=subset(data6,pop=="H"))) #*
-summary(lm(meanT~veg_h_mean,data=subset(data6,pop=="R"))) #*
-summary(lm(meanT~veg_h_mean,data=subset(data6,pop=="T"))) #* 
+print.xtable(xtable(model_temp_H,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_temp_H.html")
+print.xtable(xtable(model_temp_R,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_temp_R.html")
+print.xtable(xtable(model_temp_T,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_temp_T.html")
 
-
-#Relation among phenology and temperature (and Veg h?) 
-
-par(mfrow=c(1,1))
-plot(lm(phen_index_avg~meanT+veg_h_mean+pop,data=data6))#Good fit
-plot(lm(julian_w3~meanT+veg_h_mean+pop,data=data6))#Not so good fit
-plot(lm(julian_w2~meanT+veg_h_mean+pop,data=data6))#Not so good fit
-plot(glm(julian_w3~meanT+veg_h_mean+pop,family="poisson",data=data6))#Not so good fit
-plot(glm(julian_w2~meanT+veg_h_mean+pop,family="poisson",data=data6))#Not so good fit
-
-#Both temp and veg
-#phen_index_avg
-model1<-lm(phen_index_avg~(meanT+veg_h_mean)*pop,data=data6,na.action="na.fail")
-summary(model1)
-models1<-dredge(model1)
-summary(model.avg(models1, subset = delta < 2)) #Only one
-summary(lm(phen_index_avg~meanT*pop+veg_h_mean,data=data6,na.action="na.fail"))
-
-summary(lm(phen_index_avg~meanT+veg_h_mean,data=subset(data6,pop=="H"),na.action="na.fail"))
-summary(lm(phen_index_avg~meanT+veg_h_mean,data=subset(data6,pop=="R"),na.action="na.fail"))
-summary(lm(phen_index_avg~meanT+veg_h_mean,data=subset(data6,pop=="T"),na.action="na.fail"))
-
-#Including n_fl as covariate = measure of resource state / size
-
-summary(lm(phen_index_avg~n_fl*pop,data6))
-
-summary(lm(phen_index_avg~n_fl,data=subset(data6,pop=="H")))
-summary(lm(phen_index_avg~n_fl,data=subset(data6,pop=="R")))
-summary(lm(phen_index_avg~n_fl,data=subset(data6,pop=="T")))
-
-model1<-lm(phen_index_avg~(meanT+veg_h_mean)*pop+n_fl,data=data6,na.action="na.fail")
-summary(model1)
-models1<-dredge(model1)
-summary(model.avg(models1, subset = delta < 2)) #Only one
-summary(lm(phen_index_avg~meanT*pop+veg_h_mean+n_fl,data=data6,na.action="na.fail"))
-
-summary(lm(phen_index_avg~n_fl+meanT+veg_h_mean,data=subset(data6,pop=="H")))
-summary(lm(phen_index_avg~n_fl+meanT+veg_h_mean,data=subset(data6,pop=="R")))
-summary(lm(phen_index_avg~n_fl+meanT+veg_h_mean,data=subset(data6,pop=="T")))
-
-summary(lm(phen_index_avg~meanT+veg_h_mean,data=subset(data6,pop=="H")))
-summary(lm(phen_index_avg~meanT+veg_h_mean,data=subset(data6,pop=="R")))
-summary(lm(phen_index_avg~meanT+veg_h_mean,data=subset(data6,pop=="T")))
-
-p1<-ggplot(data6,aes(meanT,phen_index_avg,colour=pop))+
-  geom_smooth(method="lm",se=T,fullrange=T)+
-  geom_point(size=1)+theme(legend.position="none")
-p2<-ggplot(data6,aes(veg_h_mean,phen_index_avg,colour=pop))+
-  geom_smooth(method="lm",se=T,fullrange=T)+
-  geom_point(size=1)+theme(legend.position="none")
-multiplot(p1,p2,cols=2)
-
-#julian_w3
-model1<-lm(julian_w3~(meanT+veg_h_mean)*pop,data=data6,na.action="na.fail")
-summary(model1)
-models1<-dredge(model1)
-summary(model.avg(models1, subset = delta < 2)) 
-
-summary(lm(julian_w3~meanT+veg_h_mean,data=subset(data6,pop=="H"),na.action="na.fail"))
-summary(lm(julian_w3~meanT+veg_h_mean,data=subset(data6,pop=="R"),na.action="na.fail"))
-summary(lm(julian_w3~meanT+veg_h_mean,data=subset(data6,pop=="T"),na.action="na.fail"))
-
-#Including n_fl as covariate = measure of resource state / size
-
-summary(lm(julian_w3~n_fl*pop,data6))
-
-summary(lm(julian_w3~n_fl,data=subset(data6,pop=="H")))
-summary(lm(julian_w3~n_fl,data=subset(data6,pop=="R")))
-summary(lm(julian_w3~n_fl,data=subset(data6,pop=="T")))
-
-model1<-lm(julian_w3~(meanT+veg_h_mean)*pop+n_fl,data=data6,na.action="na.fail")
-summary(model1)
-models1<-dredge(model1)
-summary(model.avg(models1, subset = delta < 2)) 
-
-summary(lm(julian_w3~n_fl+meanT+veg_h_mean,data=subset(data6,pop=="H")))
-summary(lm(julian_w3~n_fl+meanT+veg_h_mean,data=subset(data6,pop=="R")))
-summary(lm(julian_w3~n_fl+meanT+veg_h_mean,data=subset(data6,pop=="T")))
+pdf("./results/figures/fig1_temp.pdf", family="Times",width=7,height=3)
+ggplot(data3, aes(veg_h_mean,meanT)) + facet_grid(.~population)+
+  geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab("Soil temperature")+
+  geom_point(size = 1)+ theme_base()+ xlab("Vegetation height (cm)")+theme(plot.background=element_rect(fill="white", colour=NA))
+dev.off()
 
 
-p1<-ggplot(data6,aes(meanT,julian_w3,colour=pop))+
-  geom_smooth(method="lm",se=T,fullrange=T)+
-  geom_point(size=1)+theme(legend.position="none")
-p2<-ggplot(data6,aes(veg_h_mean,julian_w3,colour=pop))+
-  geom_smooth(method="lm",se=T,fullrange=T)+
-  geom_point(size=1)+theme(legend.position="none")
-multiplot(p1,p2,cols=2)
+#Phen ~ temp + veg ###################################################
+#Using phen_index_avg (cause higher R2 than julian_w3)
 
-############################################################################################
-#Relation among number of flowers and temperature
+model_phen<-lm(phen_index_avg~(meanT+veg_h_mean)*pop,data=data3,na.action="na.fail")
+summary(model_phen)
+models_phen<-dredge(model_phen)
+summary(model.avg(models_phen, subset = delta < 2)) #Only one
+models_phen[1]
+model_phen_best<-lm(phen_index_avg~meanT*pop+veg_h_mean,data=data3,na.action="na.fail")
+summary(model_phen_best)
 
-with(data6,hist(n_fl))
-with(data6,hist(log(n_fl)))
+print.xtable(xtable(model_phen_best,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_phen_best.html")
 
-summary(glm.nb(n_fl~meanT+pop,data6)) # No interaction
+model_phen_H<-lm(phen_index_avg~meanT+veg_h_mean,data=subset(data3,pop=="H"),na.action="na.fail")
+model_phen_R<-lm(phen_index_avg~meanT+veg_h_mean,data=subset(data3,pop=="R"),na.action="na.fail")
+model_phen_T<-lm(phen_index_avg~meanT+veg_h_mean,data=subset(data3,pop=="T"),na.action="na.fail")
+  
+summary(model_phen_H)
+summary(model_phen_R)
+summary(model_phen_T)
 
-summary(glm.nb(n_fl~meanT,data=subset(data6,pop=="H")))
-summary(glm.nb(n_fl~meanT,data=subset(data6,pop=="R")))
-summary(glm.nb(n_fl~meanT,data=subset(data6,pop=="T")))
+print.xtable(xtable(model_phen_H,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_phen_H.html")
+print.xtable(xtable(model_phen_R,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_phen_R.html")
+print.xtable(xtable(model_phen_T,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_phen_T.html")
 
-summary(glm(n_fl~meanT+pop,data6,family="poisson")) #Overdisp
+p7<-ggplot(data3, aes(meanT,phen_index_avg)) + facet_grid(.~population)+
+  geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab("Phenology")+
+  geom_point(size = 1)+ theme_base()+ xlab("Soil temperature")+theme(plot.background=element_rect(fill="white", colour=NA))
+p8<-ggplot(data3, aes(veg_h_mean,phen_index_avg)) + facet_grid(.~population)+
+  geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab("Phenology")+
+  geom_point(size = 1)+ theme_base()+ xlab("Vegetation height (cm)")+theme(plot.background=element_rect(fill="white", colour=NA))+
+  theme(strip.text.x = element_text(colour="white"),strip.background = element_rect(fill="white"))
+pdf("./results/figures/fig2_phen.pdf", family="Times",width=7,height=6)
+multiplot(p7,p8,cols=1)
+dev.off()
 
-ggplot(data6,aes(meanT,n_fl,colour=pop))+
-  geom_smooth(method="glm.nb",se=T,fullrange=F)+
-  geom_point(size=1)+theme(legend.position="none")
-ggplot(data6,aes(veg_h_mean,n_fl,colour=pop))+
-  geom_smooth(method="glm.nb",se=T,fullrange=F)+
-  geom_point(size=1)+theme(legend.position="none")
-
-
-############################################################################################
-
-#Ants - related to temperature and / or vegetation height?
-with(data6,hist(n_redants))
-with(data6,hist(log(n_redants)))
-with(data6,hist(log(n_redants+1))) 
-with(data6,hist(sqrt(n_redants)))
-
-summary(glm.nb(n_redants~veg_h_mean+population,na.action="na.fail",data=data6))
-summary(glm.nb(n_redants~meanT+population,na.action="na.fail",data=data6))#Stronger coef
-
-model1<-glm.nb(n_redants~(veg_h_mean*meanT)*pop,na.action="na.fail",data=data6)
-models1<-dredge(model1)
-summary(model.avg(models1, subset = delta < 2))
-
-p1<-ggplot(data6, aes(veg_h_mean,n_redants,colour=pop)) +
-  geom_smooth(method = MASS::glm.nb,  se = T,fullrange=F)+
-  geom_point(size = 1)+ 
-  theme(legend.position="none")
-p2<-ggplot(data6, aes(meanT,n_redants,colour=pop)) +
-  geom_smooth(method = MASS::glm.nb,  se = T,fullrange=F)+
-  geom_point(size = 1)+
-  theme(legend.position="none")
-multiplot(p1,p2,cols=2)
-
-model1H<-glm.nb(n_redants~veg_h_mean*meanT,data=subset(data6,pop=="H"),na.action="na.fail")
-model1R<-glm.nb(n_redants~veg_h_mean*meanT,data=subset(data6,pop=="R"),na.action="na.fail")
-model1T<-glm.nb(n_redants~veg_h_mean*meanT,data=subset(data6,pop=="T"),na.action="na.fail")
-
-models1H<-dredge(model1H)
-models1R<-dredge(model1R)
-models1T<-dredge(model1T)
-
-summary(model.avg(models1H, subset = delta < 2))
-models1H[1]
-summary(glm.nb(n_redants~veg_h_mean*meanT,data=subset(data6,pop=="H"),na.action="na.fail"))
-summary(model.avg(models1R, subset = delta < 2))
-summary(model.avg(models1T, subset = delta < 2))
-
-summary(glm.nb(n_redants~veg_h_mean*meanT,data=subset(data6,pop=="R"),na.action="na.fail"))
-summary(glm.nb(n_redants~veg_h_mean*meanT,data=subset(data6,pop=="T"),na.action="na.fail"))
+#Not including n_fl as covariate (= measure of resource state / size) 
+#cause not correlated (low values) to phen within populatiosn
+with(data3,cor(phen_index_avg,n_fl)) #0.47
+with(subset(data3,pop=="H"),cor(phen_index_avg,n_fl)) #-0.25
+with(subset(data3,pop=="R"),cor(phen_index_avg,n_fl)) #↓0.30
+with(subset(data3,pop=="T"),cor(phen_index_avg,n_fl)) #0.28
 
 
-#Effect of veg h at mean temperature in pop H
-with(subset(data6,pop=="H"),mean(meanT)) #16.655
-with(subset(data6,pop=="H"),mean(veg_h_mean)) #35
+#Ants ~ temp + veg ###################################################
 
-visreg(model1H)
-visreg(model1H,"veg_h_mean",by="meanT") #10th, 50th, and 90th quantiles
-visreg(model1H,"meanT",by="veg_h_mean")
+model_ants<-glm.nb(n_redants~(veg_h_mean*meanT)*pop,na.action="na.fail",data=data3)
+models_ants<-dredge(model_ants)
+summary(model.avg(models_ants, subset = delta < 2))
+print.xtable(xtable(xtable(summary(model.avg(models_ants, subset = delta < 2))),
+     digits=c(0,3,3,3,2,3)), type="html",file="./results/tables/model_ants.html")
+models_ants[1]
+model_ants_best<-glm.nb(n_redants~meanT*veg_h_mean+pop+pop:veg_h_mean,data3)
+summary(model_ants_best)
+r.squaredLR(model_ants_best)
+NagelkerkeR2(model_ants_best)
 
-visreg(model1H,"veg_h_mean",by="meanT",breaks=5)
-visreg(model1H,"veg_h_mean",by="meanT",breaks=c(14.09787,16.655,19.6766))
-visreg(model1H,"veg_h_mean",by="meanT",breaks=c(14.09787,16.655,19.6766),
-       scale="response")
+#Plot interaction for the best model
+plot(effect(term="meanT:veg_h_mean", mod=model_ants_best,
+     xlevels=list(veg_h_mean=5:60, meanT=seq(14,20,1))),multiline=T,type="response")
 
-visreg(model1H,"veg_h_mean",by="meanT",type="conditional") 
-#Value of the variable on the x-axis and  change in response on the y-axis, 
-#holding all other variables (temp) constant at 10th, 50th, and 90th quantiles
-visreg(model1H,"veg_h_mean",by="meanT",type="contrast") 
-#Effect on the expected value of the response (ants) by moving the x variable away 
-#from a reference point on the x-axis (mean)
-visreg(model1H,"veg_h_mean",type="contrast") 
+int_ants<-data.frame(effect(term="meanT:veg_h_mean", mod=model_ants_best,
+           xlevels=list(veg_h_mean=0:60, meanT=seq(14,20,1))))
 
-plot(effect(term="veg_h_mean:meanT", mod=model1H),multiline=T)
+pdf("./results/figures/fig3_ants.pdf", family="Times",width=4,height=3.5)
+ggplot(int_ants, aes(veg_h_mean,fit, group = as.factor(meanT))) +
+  geom_line(size=0.3)+theme_base()+xlab("Vegetation height (cm)")+
+  ylab(expression(paste("Number of ", italic("Myrmica")," ants")))+
+  coord_cartesian(xlim=c(0,72),ylim=c(0,40))+theme(legend.position="none")+
+  annotate("text", x = 66.5, y = 28.3, label = "20 ºC")+
+  annotate("text", x = 66.5, y = 19.3, label = "19 ºC")+
+  annotate("text", x = 66.5, y = 13, label = "18 ºC")+
+  annotate("text", x = 66.5, y = 9, label = "17 ºC")+
+  annotate("text", x = 66.5, y = 6.3, label = "16 ºC")+
+  annotate("text", x = 66.5, y = 4.4, label = "15 ºC")+
+  annotate("text", x = 66.5, y = 2.6, label = "14 ºC")+
+  theme(plot.background=element_rect(fill="white", colour=NA))
+dev.off()
+  
+pdf("./results/figures/fig3_ants_lines.pdf", family="Times",width=4,height=3.5)
+ggplot(int_ants, aes(veg_h_mean,fit, group = as.factor(meanT))) +
+  geom_line(size=0.3,aes(veg_h_mean,fit,linetype=as.factor(meanT)))+theme_base()+xlab("Vegetation height (cm)")+
+  ylab(expression(paste("Number of ", italic("Myrmica")," ants")))+
+  coord_cartesian(xlim=c(0,72),ylim=c(0,40))+theme(legend.position="none")+
+  annotate("text", x = 66.5, y = 28.3, label = "20 ºC")+
+  annotate("text", x = 66.5, y = 19.3, label = "19 ºC")+
+  annotate("text", x = 66.5, y = 13, label = "18 ºC")+
+  annotate("text", x = 66.5, y = 9, label = "17 ºC")+
+  annotate("text", x = 66.5, y = 6.3, label = "16 ºC")+
+  annotate("text", x = 66.5, y = 4.4, label = "15 ºC")+
+  annotate("text", x = 66.5, y = 2.6, label = "14 ºC")+
+  theme(plot.background=element_rect(fill="white", colour=NA))
+dev.off()
+
+
+
+
+
+model_ants_H<-glm.nb(n_redants~veg_h_mean+meanT+meanT:veg_h_mean,data=subset(data3,pop=="H"),na.action="na.fail")
+model_ants_R<-glm.nb(n_redants~veg_h_mean+meanT+meanT:veg_h_mean,data=subset(data3,pop=="R"),na.action="na.fail")
+model_ants_T<-glm.nb(n_redants~veg_h_mean+meanT+meanT:veg_h_mean,data=subset(data3,pop=="T"),na.action="na.fail")
+summary(model_ants_H)
+summary(model_ants_R)
+summary(model_ants_T)
+
+with(subset(data3,pop=="H"),min(veg_h_mean))
+with(subset(data3,pop=="H"),max(veg_h_mean))
+with(subset(data3,pop=="R"),min(veg_h_mean))
+with(subset(data3,pop=="R"),max(veg_h_mean))
+with(subset(data3,pop=="T"),min(veg_h_mean))
+with(subset(data3,pop=="T"),max(veg_h_mean))
+with(subset(data3,pop=="H"),min(meanT))
+with(subset(data3,pop=="H"),max(meanT))
+with(subset(data3,pop=="R"),min(meanT))
+with(subset(data3,pop=="R"),max(meanT))
+with(subset(data3,pop=="T"),min(meanT))
+with(subset(data3,pop=="T"),max(meanT))
+
+#Not including models for ants for each population 
+#because interactions with population are not significant
+
+
+
+
+
+
+
+
 
 
 ############################################################################################
