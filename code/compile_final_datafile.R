@@ -1,6 +1,6 @@
 #####################################################################################
 ######################## Code to modifiy datafile to include ########################
-################# revised iButton data and new phenology measures ###################
+######### revised iButton data, new phenology measures and n_redants_mean ###########
 #####################################################################################
 
 library(ggplot2)
@@ -111,3 +111,11 @@ p4<-ggplot(data3,aes(x=julian_w3))+ theme_base()+
 pdf("./results/figures/comparison_distr_phen_measures.pdf", family="Times")
 multiplot(p1, p2, p3, p4, cols=2)
 dev.off()
+
+#Add n_redants_mean
+n_redants_mean<-read.table("./data/clean/n_redants_mean.txt",header=T,sep=",",dec=".",na.strings=".")
+head(n_redants_mean)
+data3<-merge(data3,n_redants_mean,by="id_pl")
+head(data3)
+with(data3,hist(n_redants))
+with(data3,hist(n_redants_mean))
