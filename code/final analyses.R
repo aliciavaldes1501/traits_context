@@ -51,15 +51,16 @@ dev.off()
 #Phen ~ temp + veg ###################################################
 #Using phen_index_avg (cause higher R2 than julian_w3)
 
-model_phen<-lm(phen_index_avg~(scale(meanT)+scale(veg_h_mean))*pop,data=data3,na.action="na.fail")
+model_phen<-lm(phen_index_avg~(scale(meanT)*scale(veg_h_mean))*pop,data=data3,na.action="na.fail")
 summary(model_phen)
 models_phen<-dredge(model_phen)
-summary(model.avg(models_phen, subset = delta < 2)) #Only one
+summary(model.avg(models_phen, subset = delta < 2))
 models_phen[1]
 model_phen_best<-lm(phen_index_avg~scale(meanT)*pop+scale(veg_h_mean),data=data3,na.action="na.fail")
 summary(model_phen_best)
 
-print.xtable(xtable(model_phen_best,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_phen_best.html")
+print.xtable(xtable(xtable(summary(model.avg(models_phen, subset = delta < 2))),
+           digits=c(0,3,3,3,2,3)), type="html",file="./results/tables/model_phen.html")
 
 model_phen_H<-lm(phen_index_avg~scale(meanT)+scale(veg_h_mean),data=subset(data3,pop=="H"),na.action="na.fail")
 model_phen_R<-lm(phen_index_avg~scale(meanT)+scale(veg_h_mean),data=subset(data3,pop=="R"),na.action="na.fail")
