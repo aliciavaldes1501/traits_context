@@ -28,7 +28,6 @@ print.xtable(xtable(xtable(summary(model.avg(models_temp, subset = delta < 2))),
       digits=c(0,3,3,3,2,3)), type="html",file="./results/tables/model_temp.html")
 models_temp[1]
 summary(lm(meanT~veg_h_mean*pop,data=data3,na.action="na.fail"))
-#Interaction is * but still negative relationship in all 3 pops
 
 model_temp_H<-lm(meanT~scale(veg_h_mean),data=subset(data3,pop=="H")) #*
 model_temp_R<-lm(meanT~scale(veg_h_mean),data=subset(data3,pop=="R")) #*
@@ -40,6 +39,7 @@ summary(model_temp_T)
 print.xtable(xtable(model_temp_H,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_temp_H.html")
 print.xtable(xtable(model_temp_R,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_temp_R.html")
 print.xtable(xtable(model_temp_T,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_temp_T.html")
+#Models for each pop not needed cause no * interaction in averaged model!
 
 pdf("./results/figures/fig1_temp.pdf", family="Times",width=7,height=3)
 ggplot(data3, aes(veg_h_mean,meanT)) + facet_grid(.~population)+
@@ -47,6 +47,11 @@ ggplot(data3, aes(veg_h_mean,meanT)) + facet_grid(.~population)+
   geom_point(size = 1)+ theme_base()+ xlab("Vegetation height (cm)")+theme(plot.background=element_rect(fill="white", colour=NA))
 dev.off()
 
+pdf("./results/figures/fig1_temp_together.pdf", family="Times",width=3,height=3)
+ggplot(data3, aes(veg_h_mean,meanT)) +
+  geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab("Soil temperature")+
+  geom_point(size = 1)+ theme_base()+ xlab("Vegetation height (cm)")+theme(plot.background=element_rect(fill="white", colour=NA))
+dev.off()
 
 #Phen ~ temp + veg ###################################################
 #Using phen_index_avg (cause higher R2 than julian_w3)
@@ -75,14 +80,14 @@ print.xtable(xtable(model_phen_R,digits=c(0,3,3,2,3)),type="html",file="./result
 print.xtable(xtable(model_phen_T,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_phen_T.html")
 
 p7<-ggplot(data3, aes(meanT,phen_index_avg)) + facet_grid(.~population)+
-  geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab("Phenology")+
+  geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab(NULL)+
   geom_point(size = 1)+ theme_base()+ xlab("Soil temperature")+theme(plot.background=element_rect(fill="white", colour=NA))
 p8<-ggplot(data3, aes(veg_h_mean,phen_index_avg)) + facet_grid(.~population)+
-  geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab("Phenology")+
+  geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab(NULL)+
   geom_point(size = 1)+ theme_base()+ xlab("Vegetation height (cm)")+theme(plot.background=element_rect(fill="white", colour=NA))+
   theme(strip.text.x = element_text(colour="white"),strip.background = element_rect(fill="white"))
 pdf("./results/figures/fig2_phen.pdf", family="Times",width=7,height=6)
-multiplot(p7,p8,cols=1)
+grid.arrange(p7, p8,left = textGrob("Plant phenology", rot=90, gp=gpar(fontsize=16)))
 dev.off()
 
 #Not including n_fl as covariate (= measure of resource state / size) 
@@ -195,18 +200,32 @@ data3$attack<-with(data3,ifelse(n_eggs_max>0,1,0))
 p9<-ggplot(data3, aes(over_veg,as.integer(data3$attack)))+facet_grid(.~population)+
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = T,size=0.5,color="black")+
   geom_point(size = 1)+theme_base()+ylab("Probability of having eggs")+
-  xlab("Difference betwen shoot and vegetation height")+
+  xlab("Plant prominence")+
   theme(plot.background=element_rect(fill="white", colour=NA))
 p10<-ggplot(subset(data3,n_eggs_max>0), aes(phen_index_avg,n_eggs_max))+facet_grid(.~population)+
   geom_smooth(method = "glm.nb", se = T,size=0.5,color="black")+
   geom_point(size = 1)+theme_base()+ylab("Number of eggs")+
-  xlab("Phenology")+
+  xlab("Plant phenology")+
   theme(plot.background=element_rect(fill="white", colour=NA))+
   theme(strip.text.x = element_text(colour="white"),strip.background = element_rect(fill="white"))
 pdf("./results/figures/fig4_eggs.pdf", family="Times",width=7,height=6)
 multiplot(p9,p10,cols=1)
 dev.off()
 
+p13<-ggplot(data3, aes(over_veg,as.integer(data3$attack)))+
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = T,size=0.5,color="black")+
+  geom_point(size = 1)+theme_base()+ylab("Probability of having eggs")+
+  xlab("Plant prominence")+
+  theme(plot.background=element_rect(fill="white", colour=NA))
+p14<-ggplot(subset(data3,n_eggs_max>0), aes(phen_index_avg,n_eggs_max))+
+  geom_smooth(method = "glm.nb", se = T,size=0.5,color="black")+
+  geom_point(size = 1)+theme_base()+ylab("Number of eggs")+
+  xlab("Plant phenology")+
+  theme(plot.background=element_rect(fill="white", colour=NA))+
+  theme(strip.text.x = element_text(colour="white"),strip.background = element_rect(fill="white"))
+pdf("./results/figures/fig4_eggs_together.pdf", family="Times",width=7,height=3)
+multiplot(p13,p14,cols=2)
+dev.off()
 
 #N_intact_fruits relative to n_fl #############################################
 
@@ -227,17 +246,28 @@ summary(model_fruitset_best)
 r.squaredLR(model_fruitset_best)
 NagelkerkeR2(model_fruitset_best)
 
-p11<-ggplot(data3, aes(phen_index_avg, fruit_set)) + geom_point(size = 1) + facet_grid(.~population)+
-  geom_smooth(method = "glm", method.args=list(family = "binomial"), aes(weight=n_fl),size=0.5,color="black")+
-  theme_base()+xlab("Phenology")+ylab(NULL)+
-  theme(plot.background=element_rect(fill="white", colour=NA))
-p12<-ggplot(data3, aes(n_eggs_max, fruit_set)) + geom_point(size = 1) + facet_grid(.~population)+
+p11<-ggplot(data3, aes(n_eggs_max, fruit_set)) + geom_point(size = 1) + facet_grid(.~population)+
   geom_smooth(method = "glm", method.args=list(family = "binomial"), aes(weight=n_fl),size=0.5,color="black")+
   theme_base()+xlab("Number of eggs")+ylab(NULL)+
   theme(plot.background=element_rect(fill="white", colour=NA))+
   theme(strip.text.x = element_text(colour="white"),strip.background = element_rect(fill="white"))
+p12<-ggplot(data3, aes(phen_index_avg, fruit_set)) + geom_point(size = 1) + facet_grid(.~population)+
+  geom_smooth(method = "glm", method.args=list(family = "binomial"), aes(weight=n_fl),size=0.5,color="black")+
+  theme_base()+xlab("Plant phenology")+ylab(NULL)+
+  theme(plot.background=element_rect(fill="white", colour=NA))
 pdf("./results/figures/fig5_fruitset.pdf", family="Times",width=7,height=5.5)
-grid.arrange(p11, p12,left = textGrob("Number of intact fruits / Number of flowers", rot = 90,gp=gpar(fontsize=16)))
+grid.arrange(p11, p12,left = textGrob("Fruit set", rot=90, gp=gpar(fontsize=16)))
 dev.off()
 
-
+p15<-ggplot(data3, aes(n_eggs_max, fruit_set)) + geom_point(size = 1) +
+  geom_smooth(method = "glm", method.args=list(family = "binomial"), aes(weight=n_fl),size=0.5,color="black")+
+  theme_base()+xlab("Number of eggs")+ylab("Fruit set")+
+  theme(plot.background=element_rect(fill="white", colour=NA))+
+  theme(strip.text.x = element_text(colour="white"),strip.background = element_rect(fill="white"))
+p16<-ggplot(data3, aes(phen_index_avg, fruit_set)) + geom_point(size = 1) +
+  geom_smooth(method = "glm", method.args=list(family = "binomial"), aes(weight=n_fl),size=0.5,color="black")+
+  theme_base()+xlab("Plant phenology")+ylab(NULL)+
+  theme(plot.background=element_rect(fill="white", colour=NA))
+pdf("./results/figures/fig5_fruitset_together.pdf", family="Times",width=7,height=3)
+grid.arrange(p15, rectGrob(gp=gpar(col="white")), p16, widths=c(0.45, 0.05, 0.45), ncol=3)
+dev.off()
