@@ -53,24 +53,26 @@ ggplot(data3, aes(veg_h_mean,meanT)) +
   geom_point(size = 1)+ theme_base()+ xlab("Vegetation height (cm)")+theme(plot.background=element_rect(fill="white", colour=NA))
 dev.off()
 
-#Phen ~ temp + veg ###################################################
+#Phen ~ temp ###################################################
 #Using phen_index_avg (cause higher R2 than julian_w3)
 
-model_phen<-lm(phen_index_avg~(scale(meanT)*scale(veg_h_mean))*pop,data=data3,na.action="na.fail")
+model_phen<-lm(phen_index_avg~scale(meanT)*pop,data=data3,na.action="na.fail")
+
 summary(model_phen)
 models_phen<-dredge(model_phen)
 summary(model.avg(models_phen, subset = delta < 2))
 models_phen[1]
-model_phen_best<-lm(phen_index_avg~scale(meanT)*pop+scale(veg_h_mean),data=data3,na.action="na.fail")
+model_phen_best<-lm(phen_index_avg~scale(meanT)*pop,data=data3,na.action="na.fail")
+
 summary(model_phen_best)
 
-print.xtable(xtable(xtable(summary(model.avg(models_phen, subset = delta < 2))),
-           digits=c(0,3,3,3,2,3)), type="html",file="./results/tables/model_phen.html")
+print.xtable(xtable(xtable(summary(model_phen_best)),
+           digits=c(0,3,3,2,3)), type="html",file="./results/tables/model_phen.html")
 
-model_phen_H<-lm(phen_index_avg~scale(meanT)+scale(veg_h_mean),data=subset(data3,pop=="H"),na.action="na.fail")
-model_phen_R<-lm(phen_index_avg~scale(meanT)+scale(veg_h_mean),data=subset(data3,pop=="R"),na.action="na.fail")
-model_phen_T<-lm(phen_index_avg~scale(meanT)+scale(veg_h_mean),data=subset(data3,pop=="T"),na.action="na.fail")
-  
+model_phen_H<-lm(phen_index_avg~scale(meanT),data=subset(data3,pop=="H"),na.action="na.fail")
+model_phen_R<-lm(phen_index_avg~scale(meanT),data=subset(data3,pop=="R"),na.action="na.fail")
+model_phen_T<-lm(phen_index_avg~scale(meanT),data=subset(data3,pop=="T"),na.action="na.fail")
+
 summary(model_phen_H)
 summary(model_phen_R)
 summary(model_phen_T)
@@ -79,15 +81,10 @@ print.xtable(xtable(model_phen_H,digits=c(0,3,3,2,3)),type="html",file="./result
 print.xtable(xtable(model_phen_R,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_phen_R.html")
 print.xtable(xtable(model_phen_T,digits=c(0,3,3,2,3)),type="html",file="./results/tables/model_phen_T.html")
 
-p7<-ggplot(data3, aes(meanT,phen_index_avg)) + facet_grid(.~population)+
+pdf("./results/figures/fig2_phen.pdf", family="Times",width=6,height=3)
+ggplot(data3, aes(meanT,phen_index_avg)) + facet_grid(.~population)+
   geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab(NULL)+
-  geom_point(size = 1)+ theme_base()+ xlab("Soil temperature")+theme(plot.background=element_rect(fill="white", colour=NA))
-p8<-ggplot(data3, aes(veg_h_mean,phen_index_avg)) + facet_grid(.~population)+
-  geom_smooth(method = "lm",  se = T,fullrange=T,size=0.5,color="black")+ylab(NULL)+
-  geom_point(size = 1)+ theme_base()+ xlab("Vegetation height (cm)")+theme(plot.background=element_rect(fill="white", colour=NA))+
-  theme(strip.text.x = element_text(colour="white"),strip.background = element_rect(fill="white"))
-pdf("./results/figures/fig2_phen.pdf", family="Times",width=7,height=6)
-grid.arrange(p7, p8,left = textGrob("Plant phenology", rot=90, gp=gpar(fontsize=16)))
+  geom_point(size = 1)+ theme_base()+ xlab("Soil temperature")+ylab("Plant phenology")+theme(plot.background=element_rect(fill="white", colour=NA))
 dev.off()
 
 #Not including n_fl as covariate (= measure of resource state / size) 
