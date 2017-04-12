@@ -26,8 +26,17 @@ library(cowplot)
 model_eggs<-hurdle(n_eggs_max~(scale(phen_index1)+scale(shoot_h)+
                    scale(veg_h_mean)+scale(n_redants))*pop,
                    data=data3,dist="negbin",zero.dist="binomial",na.action="na.fail")
+model_eggs_wT<-hurdle(n_eggs_max~(scale(phen_index1)+scale(shoot_h)+
+                   scale(veg_h_mean)+scale(n_redants)+scale(meanT))*pop,
+                   data=data3,dist="negbin",zero.dist="binomial",na.action="na.fail")
 models_eggs<-dredge(model_eggs)
+models_eggs_wT<-dredge(model_eggs_wT)
+
 summary(model.avg(models_eggs, subset = delta < 2)) #Table1
+summary(model.avg(models_eggs_wT, subset = delta < 2)) 
+
+summary(hurdle(n_eggs_max~meanT*pop,
+        data=data3,dist="negbin",zero.dist="binomial",na.action="na.fail"))
 #xtable not working with hurdle
 
 #Poisson model had an effect on ants on the count part, but was strongly overdispersed :(
@@ -75,6 +84,11 @@ nullmodel_eggs<-hurdle(n_eggs_max~1,data=data3,dist="negbin",zero.dist="binomial
 
 data3$attack<-with(data3,ifelse(n_eggs_max>0,1,0))
 
+ggplot(data3, aes(meanT,as.integer(data3$attack)))+
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), aes(linetype = population),se = T,size=0.5,color="black")+
+  geom_point(size = 1)+theme_base()+ylab("Probability of having eggs")+
+  xlab("Temp")+theme(plot.background=element_rect(fill="white", colour=NA))
+
 p1<-ggplot(data3, aes(phen_index1,as.integer(data3$attack)))+
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = T,size=0.5,color="black")+
   geom_point(size = 1)+theme_base()+ylab("Probability of having eggs")+
@@ -96,6 +110,19 @@ p3
 pdf("./results/figures/fig1A_eggs.pdf", family="Times",width=8,height=3)
 grid.arrange(p1, p2, p3, widths=c(0.60,0.45,0.45), ncol=3)
 dev.off()
+
+ggplot(subset(data3,n_eggs_max>0), aes(meanT,n_eggs_max))+
+  geom_smooth(method = "glm.nb", se = T,aes(linetype = population),size=0.5,color="black")+
+  geom_point(size = 1)+theme_base()+ylab("Number of eggs")+
+  xlab("Temp")+theme(plot.background=element_rect(fill="white", colour=NA))+
+  theme(strip.text.x = element_text(colour="white"),strip.background = element_rect(fill="white"))
+
+ggplot(data3, aes(meanT,n_redants))+
+  geom_smooth(method = "glm.nb", se = T,aes(linetype = population),size=0.5,color="black")+
+  geom_point(size = 1)+theme_base()+ylab("Number of ants")+
+  xlab("Temp")+theme(plot.background=element_rect(fill="white", colour=NA))+
+  theme(strip.text.x = element_text(colour="white"),strip.background = element_rect(fill="white"))
+
 
 p4<-ggplot(subset(data3,n_eggs_max>0), aes(phen_index1,n_eggs_max))+
   geom_smooth(method = "glm.nb", se = T,size=0.5,color="black")+
@@ -201,7 +228,7 @@ int_ants<-data.frame(effect(term="meanT:veg_h_mean", mod=model_ants_best,
 
 p7<-ggplot(data3, aes(meanT,phen_index1))+
   geom_smooth(method = "lm",  se = T,fullrange=T,size=0.4,color="black")+ylab(NULL)+
-  geom_point(size = 0.5)+ theme_base()+ xlab(NULL)+ylab("Plant phenology")+
+  geom_point(size = 0.5)+ theme_base()+ xlab("Soil temperature")+ylab("Plant phenology")+
   theme(plot.background=element_rect(fill="white", colour=NA))+
   scale_x_continuous(limits = c(14,19))
 p8<-ggplot(data3, aes(meanT,shoot_h))+
@@ -211,7 +238,7 @@ p8<-ggplot(data3, aes(meanT,shoot_h))+
   theme(plot.background=element_rect(fill="white", colour=NA))+
   scale_linetype_manual(values = c("solid", "dashed", "dotted"))+
   theme(legend.position="none")+scale_x_continuous(limits = c(14,19))
-p9<-ggplot(int_ants, aes(veg_h_mean,fit, group = as.factor(meanT))) + facet_grid(.~population)+
+p9<-ggplot(int_ants, aes(veg_h_mean,fit, group = as.factor(meanT)))+
   geom_line(size=0.6,aes(veg_h_mean,fit,linetype=as.factor(meanT)))+theme_base()+xlab("Vegetation height (cm)")+
   ylab(expression(paste("Number of ", italic("Myrmica")," ants")))+
   coord_cartesian(xlim=c(0,72),ylim=c(0,40))+theme(legend.position="none")+
@@ -224,9 +251,13 @@ p9<-ggplot(int_ants, aes(veg_h_mean,fit, group = as.factor(meanT))) + facet_grid
   annotate("text", x = 66.5, y = 2.6, label = "14 ºC")+
   theme(plot.background=element_rect(fill="white", colour=NA))
 p9
-fig2ab<-plot_grid(p7,p8,ncol=1,align="v", rel_heights = c(1, 1.1))
-pdf("./results/figures/fig2_phen_height_ants.pdf", family="Times",width=8,height=5)
-plot_grid(fig2ab, NULL, p9, ncol = 3, rel_heights = c(1,1,1), align="v",rel_widths=c(6,0.07,8))
+p7_8<-plot_grid(p7,p8,ncol=2,align="v")
+pdf("./results/figures/fig2_phen_height.pdf", family="Times",width=6,height=3)
+p7_8
+dev.off()
+
+pdf("./results/figures/figS2_ants.pdf", family="Times",width=4,height=4)
+p9
 dev.off()
 
 #### Model 5: Fruit set ####
@@ -253,9 +284,22 @@ data3$fruit_set<-data3$n_intact_fruits/data3$n_fl
 model_fruitset<-glm(cbind(n_intact_fruits,n_fl)~(scale(phen_index1)+scale(shoot_h)+
     scale(veg_h_mean)+scale(meanT)+scale(n_eggs_max))*pop,family="binomial",
     data=subset(data3,!pop=="R"),na.action="na.fail")
+model_fruitset_noT<-glm(cbind(n_intact_fruits,n_fl)~(scale(phen_index1)+scale(shoot_h)+
+    scale(veg_h_mean)+scale(n_eggs_max))*pop,family="binomial",
+    data=subset(data3,!pop=="R"),na.action="na.fail")
+model_fruitset_noT_noP<-glm(cbind(n_intact_fruits,n_fl)~(scale(phen_index1)+scale(shoot_h)+
+    scale(veg_h_mean))*pop,family="binomial",
+    data=subset(data3,!pop=="R"),na.action="na.fail")
 summary(model_fruitset)
 models_fruitset<-dredge(model_fruitset)
+models_fruitset_noT<-dredge(model_fruitset_noT)
+models_fruitset_noT_noP<-dredge(model_fruitset_noT_noP)
 summary(model.avg(models_fruitset,subset=delta<2)) 
+summary(model.avg(models_fruitset_noT,subset=delta<2)) 
+summary(model.avg(models_fruitset_noT_noP,subset=delta<2)) 
+
+summary(glm(cbind(n_intact_fruits,n_fl)~(scale(meanT))*pop,family="binomial",
+    data=subset(data3,!pop=="R"),na.action="na.fail"))
 
 print.xtable(xtable(xtable(summary(model.avg(models_fruitset, subset = delta < 2))),
                     digits=c(0,3,3,3,2,3)), type="html",file="./results/tables/model_fruitset.html")
