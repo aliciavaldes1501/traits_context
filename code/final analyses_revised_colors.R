@@ -44,7 +44,7 @@ summary(hurdle(n_eggs_max~meanT*pop,
 
 #Two models
 model_eggs1<-glm(attack~(scale(phen_index1)+scale(shoot_h)+
-                  scale(veg_h_mean)+scale(n_redants))*pop,
+                  scale(veg_h_mean)+scale(n_redants)+scale(meanT))*pop,
                  data=data3,family="binomial",na.action="na.fail")
 summary(model_eggs1)
 models_eggs1<-dredge(model_eggs1)
