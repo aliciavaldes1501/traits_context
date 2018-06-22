@@ -3,6 +3,9 @@ library(piecewiseSEM)
 library(ggplot2)
 library(ggfortify)
 library(ggthemes)
+library(ade4)
+library("FactoMineR")
+library(factoextra)
 
 #hurdle not allowed in piecewiseSEM
 #first attack, then n eggs
@@ -27,11 +30,25 @@ hist(data3$PC1)
 theme_set( theme_base( base_family= "Times"))
 
 pdf("./results/figures/PCA_traits.pdf", width=5,height=4)
-autoplot(PCA_traits, loadings = TRUE, loadings.colour = "black", loadings.label = TRUE,loadings.label.colour="black",
-  loadings.label.label = c("Shoot h","Phenology","N flowers"), colour="grey",data = data3)+
+autoplot(PCA_traits, loadings = T, loadings.colour = "black", loadings.label = TRUE,loadings.label.colour="black",
+  loadings.label.label = c("Phenology","Shoot h","N flowers"), colour="grey",data = data3)+
   xlab("PC1 (64.5%)")+ylab("PC2 (24.5%)")+geom_hline(aes(yintercept=0), colour="darkgrey",linetype="dashed")+
   geom_vline(aes(xintercept=0), colour="darkgrey",linetype="dashed")
 dev.off()
+
+PCA_traits_dudi <- dudi.pca(data3[c(3,21,32)], scann = T)
+names(PCA_traits_dudi)
+biplot(PCA_traits_dudi)
+s.corcircle(PCA_traits_dudi$co)
+
+fviz_pca_var(PCA_traits, col.var = "black")
+fviz_pca_ind(PCA_traits)
+
+
+
+
+
+
 
 #PCA env ####
 PCA_env<-prcomp(~data3$meanT+data3$veg_h_mean,center=T,scale=T)
@@ -52,6 +69,9 @@ summary(lm(PC1~meanT,data=subset(data3,pop=="T")))
 summary(lm(PC1~PC1_env,data=subset(data3,pop=="H")))
 summary(lm(PC1~PC1_env,data=subset(data3,pop=="R")))
 summary(lm(PC1~PC1_env,data=subset(data3,pop=="T")))
+
+summary(lmer(PC1~PC1_env+(1|pop),data=data3))
+
 
 #Effect of context (veg) on context (ants)
 summary(glm.nb(n_redants~veg_h_mean,data=subset(data3,pop=="H")))
